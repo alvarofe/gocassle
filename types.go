@@ -2,6 +2,7 @@ package gocassle
 
 import (
 	"encoding/binary"
+	"fmt"
 )
 
 const (
@@ -49,16 +50,28 @@ type TlsRecord struct {
 	data        []byte
 }
 
-type TlsHanshakeRecord struct {
+type HanshakeRecord struct {
 	msgType         uint8
 	handshakeLength uint32
 	messageData     []byte
 }
 
-func (hrec *TlsHanshakeRecord) DecodeRecord(data []byte) error {
+func (hrec *HanshakeRecord) DecodeHandshakeRecord(data []byte) error {
+	if len(data) > 5 {
+		hrec.msgType = uint8(data[0])
+		length := binary.BigEndian.Uint32(data[1:5]) >> 8
+		fmt.Println(length)
+		if int(length) > len(data) {
+			return &errorString{"Record to short"}
+		}
+		hrec.handshakeLength = length
+		hrec.messageData = data[4 : 4+length]
+		return nil
+	}
+	return &errorString{"Record too short"}
 }
 
-func (rec *TlsRecord) DecodeRecord(data []byte) error {
+func (rec *TlsRecord) DecodeTlsRecord(data []byte) error {
 	rec.contentType = uint8(data[0])
 	major := uint8(data[1])
 	minor := uint8(data[2])
@@ -75,7 +88,10 @@ func (rec *TlsRecord) DecodeRecord(data []byte) error {
 			rec.tlsVersion = TLS12
 		}
 	}
-	rec.length = binary.LittleEndian.Uint16(data[3:5])
-	rec.data = data[6:]
+	rec.length = binary.BigEndian.Uint16(data[3:5])
+	if int(rec.length) > len(data) {
+		return &errorString{"little data to process"}
+	}
+	rec.data = data[5 : 5+rec.length]
 	return nil
 }

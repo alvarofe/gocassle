@@ -76,13 +76,28 @@ func handlePacket(pkt *pcap.Packet) {
 
 func isInitialRecord(data []byte) bool {
 	if len(data) > 0 {
-		var record TlsRecord
-		if handshakeRecord, err := record.DecodeRecord(data); err != nil {
+		contentType := uint8(data[0])
+		msgType := uint8(data[5])
+		major := uint8(data[1])
+		minor := uint8(data[2])
+		tlsVersion := 0
+		if major != 3 {
 			return false
+		} else {
+			if minor == 0 {
+				tlsVersion = SSL30
+			} else if minor == 1 {
+				tlsVersion = TLS10
+			} else if minor == 2 {
+				tlsVersion = TLS11
+			} else if minor == 3 {
+				tlsVersion = TLS12
+			}
 		}
-		if record.contentType == TLS_HANDSHAKE && record.msgType == SERVER_HELLO {
+
+		if contentType == TLS_HANDSHAKE && msgType == SERVER_HELLO {
 			return true
-		} else if record.contentType == TLS_ALERT && record.msgType >= TLS10 {
+		} else if contentType == TLS_ALERT && tlsVersion >= TLS10 {
 			return true
 		}
 	}
