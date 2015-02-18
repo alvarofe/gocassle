@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/alvaro_fe/probe"
+	"github.com/alvarofe/gocassle"
 )
 
 var (

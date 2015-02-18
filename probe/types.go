@@ -1,4 +1,4 @@
-package probe
+package gocassle
 
 import (
 	"encoding/binary"
