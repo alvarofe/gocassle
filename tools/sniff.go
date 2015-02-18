@@ -30,5 +30,5 @@ func main() {
 		flag.Usage()
 		os.Exit(0)
 	}
-	probe.StartSniffing(device, port)
+	gocassle.StartSniffing(device, port)
 }
