@@ -1,4 +1,4 @@
-package gocassle
+package slave
 
 import (
 	"fmt"

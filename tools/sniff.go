@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/alvarofe/gocassle"
+	"github.com/alvarofe/gocassle/slave"
 )
 
 var (
-	device = flag.String("i", "en0", "Interface")
+	device = flag.String("i", "en1", "Interface")
 	port   = flag.String("p", "443", "Port")
 	help   = flag.Bool("h", false, "Help")
 )
@@ -30,5 +30,5 @@ func main() {
 		flag.Usage()
 		os.Exit(0)
 	}
-	gocassle.StartSniffing(device, port)
+	slave.StartSniffing(device, port)
 }

@@ -1,8 +1,8 @@
-package gocassle
+package slave
 
 import (
+	"crypto/x509"
 	"encoding/binary"
-	"fmt"
 )
 
 const (
@@ -50,17 +50,16 @@ type TlsRecord struct {
 	data        []byte
 }
 
-type HanshakeRecord struct {
+type HandshakeRecord struct {
 	msgType         uint8
 	handshakeLength uint32
 	messageData     []byte
 }
 
-func (hrec *HanshakeRecord) DecodeHandshakeRecord(data []byte) error {
+func (hrec *HandshakeRecord) DecodeHandshakeRecord(data []byte) error {
 	if len(data) > 5 {
 		hrec.msgType = uint8(data[0])
 		length := binary.BigEndian.Uint32(data[1:5]) >> 8
-		fmt.Println(length)
 		if int(length) > len(data) {
 			return &errorString{"Record to short"}
 		}
@@ -93,5 +92,25 @@ func (rec *TlsRecord) DecodeTlsRecord(data []byte) error {
 		return &errorString{"little data to process"}
 	}
 	rec.data = data[5 : 5+rec.length]
+	return nil
+}
+
+type CertMessage struct {
+	payload   []byte
+	certChain []*x509.Certificate
+}
+
+func (c *CertMessage) ParseCertMessage() error {
+	payload := c.payload
+	payload = payload[3:]
+	for len(payload) > 0 {
+		certLength := binary.BigEndian.Uint32(payload[0:4]) >> 8
+		cert, err := x509.ParseCertificate(payload[3 : 3+certLength])
+		if err != nil {
+			return err
+		}
+		c.certChain = append(c.certChain, cert)
+		payload = payload[3+certLength:]
+	}
 	return nil
 }
